@@ -31,7 +31,7 @@ if [ -x "$PREFIX/bin/pkg" ]; then
     echo "Detected Termux - building rurima from source."
     : "${PREFIX:=/data/data/com.termux/files/usr}"
     pkg update -y
-    pkg install -y git clang make autoconf automake libtool pkg-config libseccomp
+    pkg install -y git clang make autoconf automake libtool pkg-config libseccomp libcap binutils
     TMPDIR="$(mktemp -d)" || exit 1
     trap 'rm -rf "$TMPDIR"' EXIT
     git clone --depth=1 https://github.com/RuriOSS/rurima.git "$TMPDIR/rurima" || exit 1
