@@ -41,7 +41,7 @@ if [ -x "$PREFIX/bin/pkg" ]; then
     cd "$TMPDIR/rurima" || exit 1
     git submodule update --init --recursive
     ./autogen.sh
-    CFLAGS="$(pkg-config --cflags libseccomp)" CPPFLAGS="$(pkg-config --cflags libseccomp)" LDFLAGS="$(pkg-config --libs libseccomp)" ./configure --prefix="$PREFIX"
+    CPPFLAGS="$(pkg-config --cflags libseccomp)" LDFLAGS="$(pkg-config --libs libseccomp)" ./configure --prefix="$PREFIX"
     make -j"$(nproc 2>/dev/null || echo 1)" || exit 1
     read -p "Do you want to install rurima to $PREFIX/bin? [y/n]: " INSTALL
     [ "$INSTALL" = "y" ] && install -m 755 ./rurima "$PREFIX/bin/rurima" && echo "Installed to $PREFIX/bin"
