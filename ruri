@@ -21,6 +21,36 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+# Termux (Android): build ruri from source (release binaries are not Android/bionic)
+if [ -x "$PREFIX/bin/pkg" ]; then
+    echo "Detected Termux - building ruri from source."
+    : "${PREFIX:=/data/data/com.termux/files/usr}"
+    pkg update -y
+    echo "[*] Installing build deps…"
+    pkg install -y git clang make autoconf automake libtool pkg-config libseccomp libcap binutils
+    # (Optional) runtime helpers some users expect to have around
+    echo "[*] Installing runtime deps…"
+    pkg install -y xz file coreutils curl jq tar gzip proot
+    TMPDIR="$(mktemp -d)" || exit 1
+    trap 'rm -rf "$TMPDIR"' EXIT
+    git clone --depth=1 https://github.com/RuriOSS/ruri.git "$TMPDIR/ruri" || exit 1
+    cd "$TMPDIR/ruri" || exit 1
+    ./autogen.sh
+    # Ensure libseccomp is picked up (headers & libs)
+    CPPFLAGS="$(pkg-config --cflags libseccomp)" \
+    LDFLAGS="$(pkg-config --libs   libseccomp)" \
+    ./configure --prefix="$PREFIX" || exit 1
+    make -j"$(nproc 2>/dev/null || echo 1)" || exit 1
+    read -p "Do you want to install ruri to $PREFIX/bin? [y/n]: " INSTALL
+    if [ "$INSTALL" = "y" ]; then
+        install -m 755 ./ruri "$PREFIX/bin/ruri" || exit 1
+        echo "Installed ruri to $PREFIX/bin"
+    else
+        echo "Build finished; binary is at: $TMPDIR/ruri/ruri"
+    fi
+    # stop here so the generic Linux-binary path doesn't run on Android
+    return 0 2>/dev/null || exit 0
+fi
 UNAME_ARCH=$(uname -m)
 case ${UNAME_ARCH} in
 armv7* | armv8l) CPU_ARCH="armhf" ;;
